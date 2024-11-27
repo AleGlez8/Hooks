@@ -1,106 +1,149 @@
 import React, { useState } from 'react';
-import { NativeBaseProvider, Box, Text, Button, VStack, HStack, Switch, Input, useContrastText, useTheme, useColorMode, extendTheme, Center } from 'native-base';
+import { NativeBaseProvider, Box, Text, Button, VStack, HStack, Switch, Input, useAccessibleColors, useContrastText, useTheme, useColorMode, useColorModeValue, useClipboard, useDisclose, Modal } from 'native-base';
+import { SafeAreaView, StyleSheet } from 'react-native';
 
-// Definición de un tema personalizado con colores accesibles y no accesibles
-const customTheme = extendTheme({
-  colors: {
-    primary: {
-      50: '#e3f2f9',
-      100: '#c5e4f3',
-      200: '#a2d4ec',
-      300: '#7ac1e4',
-      400: '#47a9da',
-      500: '#0088cc', // Color menos accesible
-      600: '#007ab8',
-      700: '#006ba1',
-      800: '#005885',
-      900: '#003f5e',
-    },
-    accessible: {
-      50: '#f0f4c3',
-      100: '#e6ee9c',
-      200: '#dce775',
-      300: '#d4e157',
-      400: '#cddc39',
-      500: '#c0ca33', // Color accesible
-      600: '#afb42b',
-      700: '#9e9d24',
-      800: '#827717',
-      900: '#6d4c41',
-    },
-  },
-});
+const LoginScreen = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-// Componente para mostrar una tarea
-const TaskItem = ({ task, onDelete }) => {
-  // Hook useContrastText para obtener el color de contraste adecuado para el texto
-  const colorContrast = useContrastText('primary.500');
-  return (
-    <HStack space={3} alignItems="center" bg="primary.500" p={3} borderRadius="md" mb={2}>
-      <Text color={colorContrast} fontSize="lg">{task}</Text>
-      <Button colorScheme="danger" onPress={onDelete}>Delete</Button>
-    </HStack>
-  );
-};
+  // Hook useAccessibleColors para alternar colores accesibles
+  const [, , toggleAccessibleColors] = useAccessibleColors();
 
-const ToDoList = () => {
-  // Hook useState para manejar el estado de las tareas y la tarea actual
-  const [tasks, setTasks] = useState([]);
-  const [task, setTask] = useState('');
-  const [accessibleColors, setAccessibleColors] = useState(false);
-
-  // Hook useColorMode para manejar el modo de color (claro/oscuro)
+  // Hook useColorMode para alternar entre modos claro y oscuro
   const { colorMode, toggleColorMode } = useColorMode();
 
-  const addTask = () => {
-    if (task) {
-      setTasks([...tasks, task]);
-      setTask('');
-    }
-  };
+  // Hook useColorModeValue para establecer valores según el modo de color actual
+  const bgColor = useColorModeValue('warmGray.50', 'coolGray.800');
+  const textColor = useColorModeValue('black', 'white');
+  const placeholderColor = useColorModeValue('gray.500', 'gray.400');
+  const buttonBgColor = useColorModeValue('primary.500', 'primary.300');
 
-  const deleteTask = (index) => {
-    setTasks(tasks.filter((_, i) => i !== index));
-  };
+  // Hook useContrastText para obtener el color de texto de contraste
+  const buttonTextColor = useContrastText(buttonBgColor);
 
-  // Función para alternar los colores accesibles
-  const toggleAccessibleColors = () => {
-    setAccessibleColors(!accessibleColors);
+  // Hook useClipboard para copiar y pegar texto
+  const { value, onCopy } = useClipboard();
+
+  // Hook useDisclose para manejar la visibilidad del modal
+  const { isOpen, onOpen, onClose } = useDisclose();
+
+  const handleLogin = () => {
+    console.log('Email:', email);
+    console.log('Password:', password);
+    onOpen();
   };
 
   return (
-    // Center para centrar el contenido en la pantalla
-    <Center flex={1} bg={accessibleColors ? 'accessible.500' : 'primary.500'}>
-      <VStack space={4} alignItems="center" p={5}>
-        <HStack space={3} alignItems="center">
-          <Text fontSize="lg">Toggle Accessible Colors</Text>
+    <SafeAreaView style={styles.container}>
+      <VStack space={4} alignItems="center" p={9} bg={bgColor} flex={1}>
+        {/* Sección para alternar colores accesibles */}
+        <HStack space={3} alignItems="center" mt={10}>
+          <Text fontSize="lg" color={textColor}>Toggle Accessible Colors</Text>
           <Switch onValueChange={toggleAccessibleColors} colorScheme="coolGray" />
         </HStack>
+        {/* Sección para alternar el modo de color */}
         <HStack space={3} alignItems="center">
-          <Text fontSize="lg">Toggle Color Mode</Text>
+          <Text fontSize="lg" color={textColor}>Toggle Color Mode</Text>
           <Switch onValueChange={toggleColorMode} colorScheme="coolGray" />
         </HStack>
-        <HStack space={3} alignItems="center" w="100%">
-          <Input flex={1} placeholder="Add a new task" value={task} onChangeText={setTask} fontSize="lg" />
-          <Button onPress={addTask}>Add</Button>
-        </HStack>
-        <VStack space={2} w="100%">
-          {tasks.map((task, index) => (
-            <TaskItem key={index} task={task} onDelete={() => deleteTask(index)} />
-          ))}
+        <Text fontSize="lg" color={textColor}>Current Color Mode: {colorMode}</Text>
+        <VStack space={4} w="70%" mt={10}>
+          {/* Campo de entrada para el email */}
+          <Input
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            bg="white"
+            _dark={{ bg: 'coolGray.700' }}
+            color={textColor}
+            placeholderTextColor={placeholderColor}
+            fontSize="lg"
+          />
+          <HStack space={3} alignItems="center">
+            {/* Campo de entrada para la contraseña */}
+            <Input
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              type={showPassword ? "text" : "password"}
+              bg="white"
+              _dark={{ bg: 'coolGray.700' }}
+              color={textColor}
+              placeholderTextColor={placeholderColor}
+              fontSize="lg"
+              flex={1}
+            />
+            <Button onPress={() => setShowPassword(!showPassword)} bg={buttonBgColor} _text={{ color: buttonTextColor }}>
+              {showPassword ? "Hide" : "Show"}
+            </Button>
+            {/* Botón para copiar la contraseña */}
+            <Button onPress={() => onCopy(password)} bg={buttonBgColor} _text={{ color: buttonTextColor }}>
+              Copy
+            </Button>
+          </HStack>
+          <HStack space={3} alignItems="center">
+            {/* Campo de entrada para confirmar la contraseña */}
+            <Input
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              type={showPassword ? "text" : "password"}
+              bg="white"
+              _dark={{ bg: 'coolGray.700' }}
+              color={textColor}
+              placeholderTextColor={placeholderColor}
+              fontSize="lg"
+              flex={1}
+            />
+            {/* Botón para pegar la contraseña */}
+            <Button onPress={() => setConfirmPassword(value)} bg={buttonBgColor} _text={{ color: buttonTextColor }}>
+              Paste
+            </Button>
+          </HStack>
+          {/* Botón para iniciar sesión */}
+          <Button
+            onPress={handleLogin}
+            bg={buttonBgColor}
+            _text={{ color: buttonTextColor }}
+            fontSize="lg"
+          >
+            Login
+          </Button>
         </VStack>
-        <Text fontSize="lg">Current Color Mode: {colorMode}</Text>
       </VStack>
-    </Center>
+      {/* Modal para mostrar el éxito del inicio de sesión */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <Modal.Content maxWidth="400px">
+          <Modal.CloseButton />
+          <Modal.Header fontSize="lg">Login Successful</Modal.Header>
+          <Modal.Body>
+            <Text fontSize="lg">Welcome back!</Text>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onPress={onClose} fontSize="lg">
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
+    </SafeAreaView>
   );
 };
 
 const App = () => {
   return (
-    <NativeBaseProvider theme={customTheme}>
-      <ToDoList />
+    <NativeBaseProvider>
+      <LoginScreen />
     </NativeBaseProvider>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 export default App;
